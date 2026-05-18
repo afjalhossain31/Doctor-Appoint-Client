@@ -1,3 +1,7 @@
 @import "tailwindcss";
-@import "@heroui/styles"; 
+@import "@heroui/styles";
+
+html {
+  font-family: var(--font-poppins);
+}
 
