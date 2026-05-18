@@ -27,22 +27,47 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation Menu */}
-          <ul className="hidden md:flex items-center gap-8">
+          <ul className="hidden md:flex items-center gap-2">
             <li>
-              <Link href="/">Home</Link>
+              <Link 
+                href="/" 
+                className="px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition-all duration-200 font-medium"
+              >
+                Home
+              </Link>
             </li>
             <li>
-              <Link href="/all-appointment">All Appointment</Link>
+              <Link 
+                href="/all-appointment" 
+                className="px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition-all duration-200 font-medium"
+              >
+                All Appointment
+              </Link>
             </li>
             <li>
-              <Link href="/dashboard">Dashboard</Link>
+              <Link 
+                href="/dashboard" 
+                className="px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-100 hover:text-blue-600 transition-all duration-200 font-medium"
+              >
+                Dashboard
+              </Link>
             </li>
           </ul>
 
           {/* Desktop Authentication Buttons */}
-          <div className="hidden md:flex items-center gap-3">
-            <Link href="/login">Login</Link>
-            <Link href="/register">Register</Link>
+          <div className="hidden md:flex items-center gap-2">
+            <Link 
+              href="/login" 
+              className="px-5 py-2 rounded-lg text-gray-700 hover:bg-gray-200 transition-all font-medium"
+            >
+              Login
+            </Link>
+            <Link 
+              href="/register" 
+              className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200 transition-all font-medium"
+            >
+              Register
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}

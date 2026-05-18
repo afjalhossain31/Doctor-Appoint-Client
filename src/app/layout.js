@@ -9,7 +9,7 @@ const poppins = Poppins({
 });
 
 export const metadata = {
-  title: "Doctor Appointment",
+  title: "Doctor Appointment Manager",
   description: "Book your doctor appointment online",
 };
 
@@ -21,8 +21,8 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col">
         <Navbar />
-        {children}
+        <main>{children}</main> 
       </body>
     </html>
   );
-}
+} 
