@@ -1,6 +1,7 @@
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -11,6 +12,9 @@ const poppins = Poppins({
 export const metadata = {
   title: "Doctor Appointment Manager",
   description: "Book your doctor appointment online",
+  icons: {
+    icon: "/assets/Logo.png",
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -21,7 +25,8 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col">
         <Navbar />
-        <main>{children}</main> 
+        <main className="flex-grow">{children}</main>
+        <Footer />
       </body>
     </html>
   );
