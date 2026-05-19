@@ -3,10 +3,12 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut, User } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { data: session } = useSession();
 
   return (
     <nav className="bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-50">
@@ -44,30 +46,56 @@ const Navbar = () => {
                 All Appointment
               </Link>
             </li>
-            <li>
-              <Link 
-                href="/dashboard" 
-                className="px-4 py-2 rounded-full text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-300 font-medium text-sm"
-              >
-                Dashboard
-              </Link>
-            </li>
+            {session && (
+              <li>
+                <Link 
+                  href="/dashboard" 
+                  className="px-4 py-2 rounded-full text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-300 font-medium text-sm"
+                >
+                  Dashboard
+                </Link>
+              </li>
+            )}
           </ul>
 
           {/* Desktop Authentication Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <Link 
-              href="/login" 
-              className="text-slate-600 hover:text-blue-700 font-semibold text-sm transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link 
-              href="/register" 
-              className="px-6 py-2.5 rounded-full bg-slate-900 text-white hover:bg-blue-600 shadow-xl shadow-slate-200 hover:shadow-blue-200 transition-all duration-300 text-sm font-bold"
-            >
-              Register
-            </Link>
+            {session ? (
+              <div className="flex items-center gap-4">
+                <Link href="/dashboard" className="flex items-center gap-2 bg-gray-50 hover:bg-blue-50 px-3 py-1.5 rounded-full border border-gray-100 transition-all group">
+                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold relative overflow-hidden">
+                    {session.user.image ? (
+                        <Image src={session.user.image} alt="User" fill className="object-cover" />
+                    ) : (
+                        session.user.name?.[0]
+                    )}
+                  </div>
+                  <span className="text-sm font-bold text-slate-700 group-hover:text-blue-600">{session.user.name}</span>
+                </Link>
+                <button 
+                  onClick={() => signOut()}
+                  className="p-2.5 rounded-full text-gray-500 hover:text-red-500 hover:bg-red-50 transition-all"
+                  title="Sign Out"
+                >
+                  <LogOut size={20} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link 
+                  href="/login" 
+                  className="text-slate-600 hover:text-blue-700 font-semibold text-sm transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link 
+                  href="/register" 
+                  className="px-6 py-2.5 rounded-full bg-slate-900 text-white hover:bg-blue-600 shadow-xl shadow-slate-200 hover:shadow-blue-200 transition-all duration-300 text-sm font-bold"
+                >
+                  Register
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}

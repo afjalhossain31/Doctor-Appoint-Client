@@ -14,7 +14,7 @@ import "swiper/css/pagination";
 const slideData = [
   {
     id: 1,
-    image: "https://img.magnific.com/premium-photo/doctor-nurturing-small-plants-vibrant-green-environment_1241811-1748.jpg", 
+    image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=2070&auto=format&fit=crop", 
     badge: "Compassionate Care",
     title: "Expert Medical Guidance You Can Always Trust",
     description: "Your health journey is personal, and we're here to walk it with you. Connect with caring specialists dedicated to providing the highest quality healthcare for you and your loved ones.",
@@ -52,7 +52,7 @@ const slideData = [
 
 export default function Hero() {
   return (
-    <section className="relative w-full h-[75vh] sm:h-[85vh] lg:h-[90vh] bg-slate-900 overflow-hidden">
+    <section className="relative w-full h-[65vh] sm:h-[75vh] lg:h-[80vh] bg-slate-900 overflow-hidden">
       
       {/* Target Styles Overrides for Swiper Active Elements */}
       <style>{`
