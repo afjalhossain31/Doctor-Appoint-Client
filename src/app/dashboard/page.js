@@ -50,6 +50,18 @@ export default function DashboardPage() {
     if (status === "unauthenticated") {
       router.push("/login");
     } else if (status === "authenticated") {
+      // Setup profile from session if not set
+      if (session?.user && !profile.name) {
+        const timer = setTimeout(() => {
+          setProfile({
+            name: session.user.name || "Demo User",
+            email: session.user.email || "user@doctor.com",
+            photo: session.user.image || ""
+          });
+        }, 0);
+        return () => clearTimeout(timer);
+      }
+      
       // Fetch dynamic doctors from MongoDB
       const fetchDoctors = async () => {
         try {
@@ -58,21 +70,12 @@ export default function DashboardPage() {
           setDoctors(data);
         } catch (error) {
           console.error("Error fetching doctors:", error);
-          toast.error("Failed to load doctors database");
         } finally {
           setIsLoading(false);
         }
       };
       
       fetchDoctors();
-
-      if (session?.user && !profile.name) {
-        setProfile({
-          name: session.user.name || "Demo User",
-          email: session.user.email || "user@doctor.com",
-          photo: session.user.image || ""
-        });
-      }
     }
   }, [status, router, session, profile.name]);
 
@@ -162,6 +165,12 @@ export default function DashboardPage() {
                 className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'doctors' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-slate-900'}`}
               >
                 Our Doctors
+              </button>
+              <button 
+                onClick={() => router.push("/dashboard/add-doctor")}
+                className="px-6 py-2.5 rounded-xl font-bold text-sm transition-all bg-slate-900 text-white hover:bg-slate-800"
+              >
+                + Add Doctor
               </button>
             </div>
           </div>

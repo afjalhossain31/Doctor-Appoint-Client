@@ -83,9 +83,15 @@ const TopRatedDoctors = () => {
                   
                   <Link
                     href={`/doctors/d1`}
-                    className="px-6 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-200 transition-all active:scale-95"
+                    className="px-4 py-2.5 rounded-xl border border-slate-900 text-slate-900 font-bold text-sm hover:bg-slate-50 transition-all"
                   >
-                    View Details
+                    Details
+                  </Link>
+                  <Link
+                    href={`/book-appointment?doctor=${encodeURIComponent(doctor.name)}`}
+                    className="px-4 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all"
+                  >
+                    Book Now
                   </Link>
                 </div>
               </div>
