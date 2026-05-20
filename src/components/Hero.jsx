@@ -97,8 +97,8 @@ export default function Hero() {
               />
               
               {/* 2. Double Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-900/60 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-r from-slate-950/90 via-slate-900/60 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-slate-950/40 via-transparent to-transparent" />
             </div>
 
             {/* 3. Text and CTA Layout Content Layer */}

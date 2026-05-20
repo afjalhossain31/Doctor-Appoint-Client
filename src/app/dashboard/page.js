@@ -42,7 +42,10 @@ export default function DashboardPage() {
 
   // Modal States
   const [editBooking, setEditBooking] = useState(null);
+  const [editDoctor, setEditDoctor] = useState(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isTimeDropdownOpen, setIsTimeDropdownOpen] = useState(false);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
 
   // Stats states for client-side only calculations
   const [completedCount, setCompletedCount] = useState(0);
@@ -53,7 +56,7 @@ export default function DashboardPage() {
       router.push("/login");
     } else if (sessionData) {
       // Setup profile from session if not set
-      if (sessionData.user && !profile.name) {
+      if (sessionData.user && !profile.name) { 
         const timer = setTimeout(() => {
           setProfile({
             name: sessionData.user.name || "Demo User",
@@ -122,6 +125,39 @@ export default function DashboardPage() {
     } catch (error) {
       console.error("Error deleting doctor:", error);
       toast.error("An error occurred while deleting");
+    }
+  };
+
+  const handleUpdateDoctor = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const updatedDoctorData = {
+      name: formData.get("name"),
+      specialty: formData.get("specialty"),
+      qualification: formData.get("qualification"),
+      image: formData.get("image"),
+      fee: parseInt(formData.get("fee"))
+    };
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/${editDoctor._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedDoctorData),
+      });
+
+      if (res.ok) {
+        setDoctors(doctors.map(d => d._id === editDoctor._id ? { ...d, ...updatedDoctorData } : d));
+        setEditDoctor(null);
+        toast.success("Doctor updated successfully!");
+      } else {
+        toast.error("Failed to update doctor");
+      }
+    } catch (error) {
+      console.error("Error updating doctor:", error);
+      toast.error("An error occurred while updating");
     }
   };
 
@@ -224,7 +260,7 @@ export default function DashboardPage() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-[2.5rem] p-6 border border-blue-200 shadow-sm hover:shadow-lg transition-all">
+          <div className="bg-linear-to-br from-blue-50 to-blue-100 rounded-[2.5rem] p-6 border border-blue-200 shadow-sm hover:shadow-lg transition-all">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center">
                 <Calendar size={20} />
@@ -235,7 +271,7 @@ export default function DashboardPage() {
             <h3 className="text-3xl font-black text-slate-900">{bookings.length}</h3>
           </div>
 
-          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-[2.5rem] p-6 border border-green-200 shadow-sm hover:shadow-lg transition-all">
+          <div className="bg-linear-to-br from-green-50 to-green-100 rounded-[2.5rem] p-6 border border-green-200 shadow-sm hover:shadow-lg transition-all">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 rounded-2xl bg-green-600 text-white flex items-center justify-center">
                 <CheckCircle2 size={20} />
@@ -246,7 +282,7 @@ export default function DashboardPage() {
             <h3 className="text-3xl font-black text-slate-900">{completedCount}</h3>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-[2.5rem] p-6 border border-orange-200 shadow-sm hover:shadow-lg transition-all">
+          <div className="bg-linear-to-br from-orange-50 to-orange-100 rounded-[2.5rem] p-6 border border-orange-200 shadow-sm hover:shadow-lg transition-all">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 rounded-2xl bg-orange-600 text-white flex items-center justify-center">
                 <Clock size={20} />
@@ -284,6 +320,13 @@ export default function DashboardPage() {
                   <div className="flex gap-2">
                     <button className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all text-sm">
                       Book Appointment
+                    </button>
+                    <button 
+                      onClick={() => setEditDoctor(doctor)}
+                      className="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all"
+                      title="Edit Doctor"
+                    >
+                      <Edit3 size={18} />
                     </button>
                     <button 
                       onClick={() => handleDeleteDoctor(doctor._id)}
@@ -337,7 +380,11 @@ export default function DashboardPage() {
 
                     <div className="flex gap-3">
                       <button 
-                        onClick={() => setEditBooking(booking)}
+                        onClick={() => {
+                          setEditBooking(booking);
+                          setSelectedTimeSlot("");
+                          setIsTimeDropdownOpen(false);
+                        }}
                         className="flex-1 py-3 bg-blue-50 text-blue-600 font-bold rounded-xl hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center gap-2 text-sm"
                       >
                         <Edit3 size={16} /> Update
@@ -405,8 +452,8 @@ export default function DashboardPage() {
         {editBooking && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setEditBooking(null)}></div>
-            <div className="relative bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl animate-in zoom-in-95">
-               <button onClick={() => setEditBooking(null)} className="absolute top-6 right-6 text-gray-400 hover:text-slate-900"><X /></button>
+            <div className="relative bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl animate-in zoom-in-95 overflow-visible">
+               <button onClick={() => { setEditBooking(null); setIsTimeDropdownOpen(false); }} className="absolute top-6 right-6 text-gray-400 hover:text-slate-900"><X /></button>
                <h2 className="text-2xl font-black text-slate-900 mb-8">Update Appointment</h2>
                
                <form onSubmit={handleUpdateBooking} className="space-y-6">
@@ -420,12 +467,83 @@ export default function DashboardPage() {
                         <input name="date" type="date" defaultValue={editBooking.appointmentDate || editBooking.date || ""} className="w-full px-5 py-3.5 bg-gray-50 border-2 border-transparent focus:border-blue-500 rounded-2xl font-bold outline-none transition-all" required />
                      </div>
                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-900 uppercase ml-1">Preferred Time</label>
-                        <input name="time" type="time" defaultValue={editBooking.appointmentTime || editBooking.time || ""} className="w-full px-5 py-3.5 bg-gray-50 border-2 border-transparent focus:border-blue-500 rounded-2xl font-bold outline-none transition-all" required />
+                        <label className="text-xs font-bold text-slate-900 uppercase ml-1">Preferred Time Slot</label>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
+                            className="w-full px-5 py-3.5 border-2 border-gray-200 rounded-2xl bg-white flex items-center justify-between hover:border-blue-400 transition-colors font-bold"
+                          >
+                            <span className={selectedTimeSlot || editBooking.appointmentTime || editBooking.time ? 'text-slate-900' : 'text-gray-400'}>
+                              {selectedTimeSlot || editBooking.appointmentTime || editBooking.time || 'Select a time slot...'}
+                            </span>
+                          </button>
+
+                          {/* Time Slot Dropdown */}
+                          {isTimeDropdownOpen && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-lg z-50">
+                              {['09:00 AM - 12:00 PM', '12:00 PM - 03:00 PM', '03:00 PM - 06:00 PM', '06:00 PM - 09:00 PM'].map((time, idx) => (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedTimeSlot(time);
+                                    setIsTimeDropdownOpen(false);
+                                  }}
+                                  className={`w-full px-5 py-3 text-left font-bold transition-colors hover:bg-blue-50 ${
+                                    idx !== 3 ? 'border-b border-gray-100' : ''
+                                  } ${
+                                    selectedTimeSlot === time || editBooking.appointmentTime === time || editBooking.time === time
+                                      ? 'bg-blue-50 text-blue-600'
+                                      : 'text-gray-700'
+                                  }`}
+                                >
+                                  {time}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                      </div>
                   </div>
+                  <input type="hidden" name="time" value={selectedTimeSlot || editBooking.appointmentTime || editBooking.time || ""} />
                   <button type="submit" className="w-full py-4 bg-blue-600 text-white font-black rounded-2xl shadow-xl shadow-blue-100 mt-4">Save Changes</button>
                </form>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Doctor Modal */}
+        {editDoctor && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setEditDoctor(null)}></div>
+            <div className="relative bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl animate-in zoom-in-95">
+              <button onClick={() => setEditDoctor(null)} className="absolute top-6 right-6 text-gray-400 hover:text-slate-900"><X /></button>
+              <h2 className="text-2xl font-black text-slate-900 mb-8">Edit Doctor</h2>
+              
+              <form onSubmit={handleUpdateDoctor} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-900 uppercase ml-1">Doctor Name</label>
+                  <input name="name" type="text" defaultValue={editDoctor.name || ""} className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent focus:border-blue-500 rounded-2xl font-bold outline-none transition-all" required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-900 uppercase ml-1">Specialty</label>
+                  <input name="specialty" type="text" defaultValue={editDoctor.specialty || ""} className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent focus:border-blue-500 rounded-2xl font-bold outline-none transition-all" required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-900 uppercase ml-1">Qualification</label>
+                  <input name="qualification" type="text" defaultValue={editDoctor.qualification || ""} className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent focus:border-blue-500 rounded-2xl font-bold outline-none transition-all" required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-900 uppercase ml-1">Image URL</label>
+                  <input name="image" type="url" defaultValue={editDoctor.image || ""} className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent focus:border-blue-500 rounded-2xl font-bold outline-none transition-all" required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-900 uppercase ml-1">Consultation Fee (৳)</label>
+                  <input name="fee" type="number" defaultValue={editDoctor.fee || ""} className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent focus:border-blue-500 rounded-2xl font-bold outline-none transition-all" required />
+                </div>
+                <button type="submit" className="w-full py-4 bg-blue-600 text-white font-black rounded-2xl shadow-xl shadow-blue-100 mt-4">Save Changes</button>
+              </form>
             </div>
           </div>
         )}

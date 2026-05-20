@@ -32,7 +32,7 @@ const WhyChooseUs = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
               {benefits.map((benefit, index) => (
                 <div key={index} className="flex items-center gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                  <div className="shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
                     <CheckCircle className="text-blue-600" size={16} />
                   </div>
                   <span className="text-slate-700 font-medium text-sm">{benefit}</span>
@@ -53,8 +53,8 @@ const WhyChooseUs = () => {
                 />
             </div>
             {/* Decorative circles */}
-            <div className="absolute -top-12 -right-12 w-64 h-64 bg-blue-50 rounded-full -z-0 opacity-50 blur-3xl"></div>
-            <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-blue-100 rounded-full -z-0 opacity-50 blur-3xl"></div>
+            <div className="absolute -top-12 -right-12 w-64 h-64 bg-blue-50 rounded-full z-0 opacity-50 blur-3xl"></div>
+            <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-blue-100 rounded-full z-0 opacity-50 blur-3xl"></div>
           </div>
         </div>
       </div>

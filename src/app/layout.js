@@ -74,7 +74,7 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <Toaster position="top-center" reverseOrder={false} />
           <Navbar />
-          <main className="flex-grow">{children}</main>
+          <main className="grow">{children}</main>
           <Footer />
         </AuthProvider>
       </body>
