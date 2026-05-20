@@ -12,10 +12,23 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setPasswordError("");
+
+    // Password Validation
+    if (password.length < 8) {
+      setPasswordError("Password must be at least 8 characters long.");
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setPasswordError("Password must contain at least one capital letter.");
+      return;
+    }
+
     setLoading(true);
     
     const { data, error } = await authClient.signIn.email({
@@ -74,12 +87,20 @@ export default function LoginPage() {
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (passwordError) setPasswordError("");
+                }}
                 placeholder="••••••••"
-                className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all font-medium outline-none"
+                className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 transition-all font-medium outline-none ${passwordError ? 'ring-2 ring-red-500' : 'focus:ring-blue-500'}`}
                 required
               />
             </div>
+            {passwordError && (
+              <p className="text-red-500 text-xs font-bold mt-1 ml-1 animate-pulse">
+                {passwordError}
+              </p>
+            )}
           </div>
 
           <button
