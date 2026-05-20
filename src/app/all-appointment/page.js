@@ -2,13 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Star, MapPin, Clock, ArrowRight, Search } from "lucide-react";
+import { Star, MapPin, Clock, ArrowRight, Search, X, Filter } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const AllAppointmentsPage = () => {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [specialty, setSpecialty] = useState("All");
+  const [specialties, setSpecialties] = useState([]);
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -17,6 +19,9 @@ const AllAppointmentsPage = () => {
         if (res.ok) {
           const data = await res.json();
           setDoctors(data);
+          // Extract unique specialties
+          const uniqueSpecialties = ["All", ...new Set(data.map(d => d.specialty))];
+          setSpecialties(uniqueSpecialties);
         }
       } catch (error) {
         console.error("Error fetching doctors:", error);
@@ -27,45 +32,109 @@ const AllAppointmentsPage = () => {
     fetchDoctors();
   }, []);
 
-  const filteredDoctors = doctors.filter(doc => 
-    doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.specialty.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredDoctors = doctors.filter(doc => {
+    const matchesSearch = 
+      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.specialty.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSpecialty = specialty === "All" || doc.specialty === specialty;
+    return matchesSearch && matchesSpecialty;
+  });
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setSpecialty("All");
+  };
 
   return (
     <div className="min-h-screen bg-gray-50/50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Header & Search Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-          <div>
-            <h1 className="text-4xl font-black text-slate-900 mb-2">Available Appointments</h1>
-            <p className="text-gray-500 font-medium">Find and book your preferred specialist instantly.</p>
+        {/* Header Section */}
+        <div className="mb-12">
+          <div className="text-center mb-10">
+            <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-3">Find Your Specialist</h1>
+            <p className="text-gray-500 font-medium text-lg">Search and book appointments with top-rated doctors</p>
           </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-              <input 
-                type="text" 
-                placeholder="Search doctors..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 pr-6 py-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-80 transition-all font-medium"
-              />
+
+          {/* Search and Filter Section */}
+          <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/50 border border-gray-100">
+            <div className="space-y-6">
+              {/* Search Bar */}
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" size={22} />
+                <input 
+                  type="text" 
+                  placeholder="Search by doctor name or specialty..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-14 pr-12 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-blue-600 focus:bg-white focus:outline-none transition-all font-medium text-slate-900 placeholder:text-gray-400"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+
+              {/* Specialty Filter */}
+              <div className="flex flex-wrap gap-3">
+                <div className="flex items-center gap-2 text-sm font-bold text-slate-600 uppercase tracking-wider">
+                  <Filter size={18} className="text-blue-600" />
+                  Filter by Specialty:
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {specialties.map((spec) => (
+                    <button
+                      key={spec}
+                      onClick={() => setSpecialty(spec)}
+                      className={`px-5 py-2 rounded-full font-bold text-sm transition-all ${
+                        specialty === spec
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      {spec}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Clear Filters */}
+              {(searchTerm || specialty !== "All") && (
+                <button
+                  onClick={handleClearSearch}
+                  className="text-sm font-bold text-blue-600 hover:text-blue-700 underline"
+                >
+                  Clear all filters
+                </button>
+              )}
+
+              {/* Results Count */}
+              <div className="pt-2 border-t border-gray-100">
+                <p className="text-sm font-bold text-slate-600">
+                  Found <span className="text-blue-600">{filteredDoctors.length}</span> {filteredDoctors.length === 1 ? "doctor" : "doctors"}
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Doctors Grid */}
         {loading ? (
           <div className="text-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-500 font-medium">Loading doctors...</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredDoctors.length === 0 ? (
-                <div className="col-span-full text-center py-10">
-                    <p className="text-gray-500 font-bold">No doctors found matching your criteria.</p>
+                <div className="col-span-full text-center py-16">
+                    <Search size={48} className="mx-auto text-gray-300 mb-4" />
+                    <p className="text-gray-500 font-bold text-lg">No doctors found matching your criteria.</p>
+                    <p className="text-gray-400 text-sm mt-2">Try adjusting your search or filters.</p>
                 </div>
             ) : (
                 filteredDoctors.map((doctor) => (

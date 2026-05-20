@@ -8,6 +8,12 @@ import Image from "next/image";
 import { Mail, Lock, ArrowRight, Github } from "lucide-react";
 import toast from "react-hot-toast";
 
+export const metadata = {
+  title: "Login | DoctorAppoint - Sign in to Your Account",
+  description: "Login to your DoctorAppoint account to manage appointments, view doctor profiles, and book consultations easily.",
+  keywords: "login, sign in, doctor appointment account, healthcare portal",
+};
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");

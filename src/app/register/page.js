@@ -17,6 +17,12 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
+export const metadata = {
+  title: "Register | DoctorAppoint - Create Your Account",
+  description: "Sign up on DoctorAppoint to access our healthcare platform. Create your account to book doctor appointments and manage your medical records.",
+  keywords: "register, sign up, create account, doctor appointment platform, healthcare",
+};
+
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
