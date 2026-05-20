@@ -11,6 +11,12 @@ export const auth = betterAuth({
   emailAndPassword: { 
     enabled: true, 
   },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENTID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    },
+  },
   user: {
     modelName: "users", // Map "user" to "users" collection to match your Express backend
   },
