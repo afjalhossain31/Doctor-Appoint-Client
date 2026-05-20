@@ -79,6 +79,26 @@ export default function DashboardPage() {
     }
   }, [isPending, router, sessionData, profile.name]);
 
+  // Actions: Doctors
+  const handleDeleteDoctor = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this doctor?")) return;
+    
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/${id}`, {
+        method: "DELETE"
+      });
+      if (res.ok) {
+        setDoctors(doctors.filter(d => d._id !== id));
+        toast.success("Doctor removed successfully!");
+      } else {
+        toast.error("Failed to delete doctor");
+      }
+    } catch (error) {
+      console.error("Error deleting doctor:", error);
+      toast.error("An error occurred while deleting");
+    }
+  };
+
   // Actions: Booking
   const handleDeleteBooking = (id) => {
     setBookings(bookings.filter(b => b.id !== id));
@@ -199,9 +219,18 @@ export default function DashboardPage() {
                   <h4 className="font-bold text-lg text-slate-900">{doctor.name}</h4>
                   <p className="text-blue-500 text-sm font-bold uppercase mb-2">{doctor.specialty}</p>
                   <p className="text-gray-500 text-xs mb-4">{doctor.qualification}</p>
-                  <button className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all text-sm">
-                    Book Appointment
-                  </button>
+                  <div className="flex gap-2">
+                    <button className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all text-sm">
+                      Book Appointment
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteDoctor(doctor._id)}
+                      className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all"
+                      title="Delete Doctor"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

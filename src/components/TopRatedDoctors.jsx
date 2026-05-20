@@ -3,37 +3,37 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Star, ArrowRight } from "lucide-react";
-
-const doctors = [
-  {
-    id: 1,
-    name: "Dr. Sarah Johnson",
-    specialty: "Cardiologist",
-    rating: 4.9,
-    reviews: 120,
-    image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&q=80&w=400&h=500",
-  },
-  {
-    id: 2,
-    name: "Dr. Michael Chen",
-    specialty: "Neurologist",
-    rating: 4.8,
-    reviews: 95,
-    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400&h=500",
-  },
-  {
-    id: 3,
-    name: "Dr. Emily Rodriguez",
-    specialty: "Pediatrician",
-    rating: 4.9,
-    reviews: 150,
-    image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&q=80&w=400&h=500",
-  },
-];
+import { useEffect, useState } from "react";
 
 const TopRatedDoctors = () => {
-  // Mock login state - in a real app, this would come from an Auth Context
-  const isLoggedIn = false; 
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors`);
+        if (res.ok) {
+          const data = await res.json();
+          setDoctors(data.slice(0, 3)); // Only show top 3 on home page
+        }
+      } catch (error) {
+        console.error("Error fetching doctors:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDoctors();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="py-24 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-4 text-gray-500 font-medium">Loading top doctors...</p>
+      </div>
+    );
+  }
 
   return (
     <section className="py-24 bg-gray-50">
@@ -53,50 +53,53 @@ const TopRatedDoctors = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {doctors.map((doctor) => (
-            <div key={doctor.id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-xl shadow-gray-200/50 hover:-translate-y-2 transition-transform duration-300 group">
-              <div className="relative h-72">
-                <Image
-                  src={doctor.image}
-                  alt={doctor.name}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                  <Star size={16} className="text-yellow-400 fill-yellow-400" />
-                  <span className="text-sm font-bold text-slate-900">{doctor.rating}</span>
-                </div>
-              </div>
-              
-              <div className="p-6">
-                <p className="text-blue-600 font-bold text-sm mb-2 px-3 py-1 bg-blue-50 rounded-full inline-block">
-                  {doctor.specialty}
-                </p>
-                <h3 className="text-xl font-bold text-slate-900 mb-4">{doctor.name}</h3>
-                
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div className="text-sm text-gray-500">
-                    <span className="font-bold text-slate-900">{doctor.reviews}</span> Reviews
-                  </div>
-
-
-                  
-                  <Link
-                    href={`/doctors/d1`}
-                    className="px-4 py-2.5 rounded-xl border border-slate-900 text-slate-900 font-bold text-sm hover:bg-slate-50 transition-all"
-                  >
-                    Details
-                  </Link>
-                  <Link
-                    href={`/book-appointment?doctor=${encodeURIComponent(doctor.name)}`}
-                    className="px-4 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all"
-                  >
-                    Book Now
-                  </Link>
-                </div>
-              </div>
+          {doctors.length === 0 ? (
+            <div className="col-span-full text-center py-10">
+              <p className="text-gray-500">No doctors found in the database.</p>
             </div>
-          ))}
+          ) : (
+            doctors.map((doctor) => (
+              <div key={doctor._id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-xl shadow-gray-200/50 hover:-translate-y-2 transition-transform duration-300 group">
+                <div className="relative h-72">
+                  <Image
+                    src={doctor.image || "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&q=80&w=400&h=500"}
+                    alt={doctor.name}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                    <Star size={16} className="text-yellow-400 fill-yellow-400" />
+                    <span className="text-sm font-bold text-slate-900">{doctor.rating || "4.9"}</span>
+                  </div>
+                </div>
+                
+                <div className="p-6">
+                  <p className="text-blue-600 font-bold text-sm mb-2 px-3 py-1 bg-blue-50 rounded-full inline-block">
+                    {doctor.specialty}
+                  </p>
+                  <h3 className="text-xl font-bold text-slate-900 mb-4">{doctor.name}</h3>
+                  
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="text-sm text-gray-500">
+                      <span className="font-bold text-slate-900">{doctor.reviews || "120"}</span> Reviews
+                    </div>
+                    <Link
+                      href={`/doctors/d1`}
+                      className="px-4 py-2.5 rounded-xl border border-slate-900 text-slate-900 font-bold text-sm hover:bg-slate-50 transition-all"
+                    >
+                      Details
+                    </Link>
+                    <Link
+                      href={`/book-appointment?doctor=${encodeURIComponent(doctor.name)}`}
+                      className="px-4 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all"
+                    >
+                      Book Now
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </section>
