@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -26,7 +26,7 @@ const doctorData = {
   id: "d1",
   name: "Dr. Ayesha Rahman",
   specialty: "Cardiologist",
-  image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&q=80&w=800", // Using a reliable unsplash image
+  image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&q=80&w=800",
   experience: "10 years",
   availability: ["09:00 AM - 12:00 PM", "04:00 PM - 07:00 PM"],
   description: "Highly experienced cardiologist specializing in heart diseases, preventive care, and patient-centered treatment. Dr. Ayesha is committed to providing comprehensive cardiac care with a focus on long-term wellness.",
@@ -40,7 +40,6 @@ const doctorData = {
 };
 
 const DoctorDetailsPage = () => {
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reviews, setReviews] = useState(doctorData.reviews);
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
@@ -48,11 +47,9 @@ const DoctorDetailsPage = () => {
   const session = sessionData?.user;
   const router = useRouter();
 
-
-  
-
   const handleBooking = () => {
     if (!session) {
+      toast.error("Please login to book an appointment");
       router.push("/login");
       return;
     }
@@ -74,7 +71,7 @@ const DoctorDetailsPage = () => {
 
     const review = {
       id: Date.now(),
-      user: session.user.name || "Anonymous User",
+      user: session.name || "Anonymous User",
       rating: newReview.rating,
       comment: newReview.comment,
       date: new Date().toISOString().split('T')[0]
@@ -91,11 +88,11 @@ const DoctorDetailsPage = () => {
         
         {/* Back Link */}
         <Link 
-          href="/" 
+          href="/all-appointment" 
           className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 font-medium mb-8 transition-colors group"
         >
           <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-          Back to Home
+          Back to Search
         </Link>
 
         {/* Main Content Card */}
@@ -329,7 +326,7 @@ const DoctorDetailsPage = () => {
               <button 
                 className="flex-1 py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-xl shadow-slate-200 transition-all active:scale-95"
                 onClick={() => {
-                  alert(`Appointment Booked Successfully for ${session?.user?.name || 'User'}!`);
+                  alert(`Appointment Booked Successfully for ${session?.name || 'User'}!`);
                   setIsModalOpen(false);
                 }}
               >

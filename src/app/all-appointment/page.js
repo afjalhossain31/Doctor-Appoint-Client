@@ -1,82 +1,36 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
-import { Star, MapPin, Clock, Calendar, ArrowRight, Filter, Search } from "lucide-react";
-
-// Demo data for all appointments/doctors
-const allDoctors = [
-  {
-    id: "d1",
-    name: "Dr. Sarah Johnson",
-    specialty: "Cardiologist",
-    rating: 4.9,
-    reviews: 120,
-    experience: "12 years",
-    location: "Dhanmondi, Dhaka",
-    fee: 1000,
-    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400&h=500",
-  },
-  {
-    id: "d2",
-    name: "Dr. Michael Chen",
-    specialty: "Neurologist",
-    rating: 4.8,
-    reviews: 95,
-    experience: "8 years",
-    location: "Banani, Dhaka",
-    fee: 1200,
-    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400&h=500",
-  },
-  {
-    id: "d3",
-    name: "Dr. Emily Rodriguez",
-    specialty: "Pediatrician",
-    rating: 4.9,
-    reviews: 150,
-    experience: "10 years",
-    location: "Uttara, Dhaka",
-    fee: 800,
-    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400&h=500",
-  },
-  {
-    id: "d4",
-    name: "Dr. James Wilson",
-    specialty: "Orthopedic",
-    rating: 4.7,
-    reviews: 80,
-    experience: "15 years",
-    location: "Mirpur, Dhaka",
-    fee: 900,
-    image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400&h=500",
-  },
-  {
-    id: "d5",
-    name: "Dr. Lisa Wang",
-    specialty: "Dermatologist",
-    rating: 4.8,
-    reviews: 110,
-    experience: "7 years",
-    location: "Gulshan, Dhaka",
-    fee: 1100,
-    image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&q=80&w=400&h=500",
-  },
-  {
-    id: "d6",
-    name: "Dr. Robert Fox",
-    specialty: "General Surgeon",
-    rating: 4.6,
-    reviews: 65,
-    experience: "20 years",
-    location: "Dhanmondi, Dhaka",
-    fee: 1500,
-    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400&h=500",
-  },
-];
+import { Star, MapPin, Clock, ArrowRight, Search } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const AllAppointmentsPage = () => {
-  // Mock login state - change to false to test redirect
-  const isLoggedIn = true; 
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors`);
+        if (res.ok) {
+          const data = await res.json();
+          setDoctors(data);
+        }
+      } catch (error) {
+        console.error("Error fetching doctors:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDoctors();
+  }, []);
+
+  const filteredDoctors = doctors.filter(doc => 
+    doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    doc.specialty.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-gray-50/50 py-12">
@@ -95,86 +49,87 @@ const AllAppointmentsPage = () => {
               <input 
                 type="text" 
                 placeholder="Search doctors..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-12 pr-6 py-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-80 transition-all font-medium"
               />
             </div>
-            <button className="p-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:bg-gray-50 transition-colors text-slate-900 px-5 flex items-center gap-2 font-bold">
-              <Filter size={20} />
-              Filter
-            </button>
           </div>
         </div>
 
-        {/* Appointment Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {allDoctors.map((doctor) => (
-            <div key={doctor.id} className="bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-xl shadow-gray-200/40 hover:-translate-y-2 transition-all duration-300 group flex flex-col">
-              
-              {/* Image & Price Tag */}
-              <div className="relative h-64">
-                <Image
-                  src={doctor.image}
-                  alt={doctor.name}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-4 py-2 rounded-2xl shadow-sm flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">Available Today</span>
+        {loading ? (
+          <div className="text-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredDoctors.length === 0 ? (
+                <div className="col-span-full text-center py-10">
+                    <p className="text-gray-500 font-bold">No doctors found matching your criteria.</p>
                 </div>
-                <div className="absolute bottom-4 right-4 bg-blue-600 px-4 py-2 rounded-2xl text-white font-black shadow-lg shadow-blue-200">
-                    ৳ {doctor.fee}
-                </div>
-              </div>
+            ) : (
+                filteredDoctors.map((doctor) => (
+                    <div key={doctor._id} className="bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-xl shadow-gray-200/50 hover:shadow-2xl hover:shadow-blue-100 transition-all duration-500 group">
+                        <div className="relative h-64">
+                        <Image
+                            src={doctor.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400&h=500"}
+                            alt={doctor.name}
+                            fill
+                            className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl flex items-center gap-1.5 shadow-sm border border-white/50">
+                            <Star size={16} className="text-yellow-400 fill-yellow-400" />
+                            <span className="text-sm font-black text-slate-900">{doctor.rating || "4.9"}</span>
+                        </div>
+                        </div>
+                        
+                        <div className="p-8">
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                            <span className="text-blue-600 font-black text-[10px] uppercase tracking-[0.2em] px-3 py-1 bg-blue-50 rounded-lg mb-2 inline-block">
+                                {doctor.specialty}
+                            </span>
+                            <h3 className="text-2xl font-black text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
+                                {doctor.name}
+                            </h3>
+                            </div>
+                        </div>
 
-              {/* Content */}
-              <div className="p-8 flex-1 flex flex-col">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest">
-                        {doctor.specialty}
-                    </span>
-                    <h3 className="text-2xl font-bold text-slate-900 mt-2">{doctor.name}</h3>
-                  </div>
-                  <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg">
-                    <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                    <span className="text-xs font-bold text-yellow-700">{doctor.rating}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3 mb-8">
-                  <div className="flex items-center gap-3 text-gray-500 text-sm font-medium">
-                    <Calendar size={16} className="text-blue-500" />
-                    <span>{doctor.experience} Experience</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-500 text-sm font-medium">
-                    <MapPin size={16} className="text-blue-500" />
-                    <span>{doctor.location}</span>
-                  </div>
-                </div>
-
-                <div className="mt-auto">
-                    <Link
-                        href={isLoggedIn ? `/doctors/d1` : "/login"}
-                        className="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-xl shadow-slate-200 hover:bg-blue-600 transition-all flex items-center justify-center gap-2 group/btn"
-                    >
-                        View Details
-                        <ArrowRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
-                    </Link>
-                </div>
-              </div>
-
-            </div>
-          ))}
-        </div>
-
-        {/* Empty State / Pagination (optional) */}
-        <div className="mt-16 text-center">
-            <button className="px-8 py-3.5 border-2 border-slate-900 font-bold rounded-2xl hover:bg-slate-900 hover:text-white transition-all">
-                Load More Doctors
-            </button>
-        </div>
-
+                        <div className="space-y-3 mb-8">
+                            <div className="flex items-center gap-3 text-gray-500 font-medium text-sm">
+                            <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-blue-600">
+                                <Clock size={16} />
+                            </div>
+                            <span>{doctor.experience || "10+ Years Experience"}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-gray-500 font-medium text-sm">
+                            <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-blue-600">
+                                <MapPin size={16} />
+                            </div>
+                            <span>{doctor.location || "Dhanmondi, Dhaka"}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between pt-6 border-t border-gray-100 gap-4">
+                            <Link
+                            href={`/doctors/d1`}
+                            className="flex-1 text-center py-4 rounded-2xl border-2 border-slate-100 text-slate-900 font-black text-sm hover:bg-slate-50 transition-all uppercase tracking-wider"
+                            >
+                            Details
+                            </Link>
+                            <Link
+                            href={`/book-appointment?doctor=${encodeURIComponent(doctor.name)}`}
+                            className="flex-1 text-center py-4 rounded-2xl bg-blue-600 text-white font-black text-sm hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-200 transition-all uppercase tracking-wider"
+                            >
+                            Book Now
+                            </Link>
+                        </div>
+                        </div>
+                    </div>
+                ))
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
