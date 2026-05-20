@@ -17,7 +17,7 @@ import {
   X
 } from "lucide-react";
 
-import { useSession } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
@@ -44,7 +44,8 @@ const DoctorDetailsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reviews, setReviews] = useState(doctorData.reviews);
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
-  const { data: session } = useSession();
+  const { data: sessionData } = authClient.useSession();
+  const session = sessionData?.user;
   const router = useRouter();
 
 

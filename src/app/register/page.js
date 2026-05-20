@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
@@ -22,54 +22,46 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const validatePassword = (password) => {
-    if (password.length < 6) return "Password must be at least 6 characters long.";
-    if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter.";
-    if (!/[a-z]/.test(password)) return "Password must contain at least one lowercase letter.";
-    return null;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const formData = new FormData(e.target);
-    const name = formData.get("name");
-    const email = formData.get("email");
-    const photo = formData.get("photo");
-    const password = formData.get("password");
+    const formData = new FormData(e.currentTarget);
+    const { name, email, password } = Object.fromEntries(formData.entries());
 
-    // validation
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      setError(passwordError);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // Simulating registration logic since we don't have a backend yet
-      // In a real app, you'd call fetch('/api/register', ...)
-      console.log("Registering:", { name, email, photo, password });
-      
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-      
-      toast.success("Registration successful! Please login.");
-      router.push("/login");
-    } catch (err) {
-      setError("Registration failed. Please try again.");
-      toast.error("Error creating account");
-    } finally {
-      setLoading(false);
-    }
+    const { data, error: authError } = await authClient.signUp.email({
+      email,
+      password,
+      name,
+      image: "", // Optional: specific in Better Auth
+    }, {
+      onRequest: () => {
+        setLoading(true);
+      },
+      onSuccess: () => {
+        toast.success("Registration successful!");
+        router.push("/dashboard");
+      },
+      onError: (ctx) => {
+        setError(ctx.error.message || "Registration failed");
+        toast.error(ctx.error.message || "Error creating account");
+        setLoading(false);
+      },
+    });
   };
 
   const handleSocialSignup = async (provider) => {
     try {
-      await signIn(provider, { callbackUrl: "/" });
+      setLoading(true);
+      await authClient.signIn.social({
+        provider: provider,
+        callbackURL: "/dashboard",
+      });
     } catch (err) {
       toast.error(`Login with ${provider} failed`);
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -7,13 +7,11 @@ const client = new MongoClient(process.env.MONGODB_URI);
 const db = client.db("Doctor-Appoint");
 
 export const auth = betterAuth({
-  database: mongodbAdapter(db, {
-    
-    client
-  }),
-  
-   emailAndPassword: { 
+  database: mongodbAdapter(db),
+  emailAndPassword: { 
     enabled: true, 
   },
-
+  user: {
+    modelName: "users", // Map "user" to "users" collection to match your Express backend
+  },
 });

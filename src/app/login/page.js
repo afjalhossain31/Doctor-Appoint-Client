@@ -1,12 +1,15 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, Lock, ArrowRight, Github } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -14,15 +17,29 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    await signIn("credentials", {
+    
+    const { data, error } = await authClient.signIn.email({
       email,
       password,
-      callbackUrl: "/",
+      rememberMe: true,
+      callbackURL: "/dashboard"
+    }, {
+      onSuccess: () => {
+        toast.success("Login successful!");
+        router.push("/dashboard");
+      },
+      onError: (ctx) => {
+        toast.error(ctx.error.message || "Invalid credentials");
+        setLoading(false);
+      }
     });
-    setLoading(false);
   };
 
   return (
+
+
+
+
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-xl shadow-gray-200 p-10 border border-gray-100">
         <div className="text-center mb-10">

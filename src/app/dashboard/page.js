@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { 
@@ -19,7 +19,7 @@ import Image from "next/image";
 import toast from "react-hot-toast";
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
+  const { data: sessionData, isPending } = authClient.useSession();
   const router = useRouter();
   
   // Tab Management
@@ -47,16 +47,16 @@ export default function DashboardPage() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (!isPending && !sessionData) {
       router.push("/login");
-    } else if (status === "authenticated") {
+    } else if (sessionData) {
       // Setup profile from session if not set
-      if (session?.user && !profile.name) {
+      if (sessionData.user && !profile.name) {
         const timer = setTimeout(() => {
           setProfile({
-            name: session.user.name || "Demo User",
-            email: session.user.email || "user@doctor.com",
-            photo: session.user.image || ""
+            name: sessionData.user.name || "Demo User",
+            email: sessionData.user.email || "user@doctor.com",
+            photo: sessionData.user.image || ""
           });
         }, 0);
         return () => clearTimeout(timer);
@@ -77,7 +77,7 @@ export default function DashboardPage() {
       
       fetchDoctors();
     }
-  }, [status, router, session, profile.name]);
+  }, [isPending, router, sessionData, profile.name]);
 
   // Actions: Booking
   const handleDeleteBooking = (id) => {

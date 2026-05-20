@@ -4,11 +4,12 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Menu, X, LogOut, User } from "lucide-react";
-import { useSession, signOut } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { data: session } = useSession();
+  const { data: sessionData } = authClient.useSession();
+  const session = sessionData?.user;
 
   return (
     <nav className="bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-50">
@@ -64,16 +65,19 @@ const Navbar = () => {
               <div className="flex items-center gap-4">
                 <Link href="/dashboard" className="flex items-center gap-2 bg-gray-50 hover:bg-blue-50 px-3 py-1.5 rounded-full border border-gray-100 transition-all group">
                   <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold relative overflow-hidden">
-                    {session.user.image ? (
-                        <Image src={session.user.image} alt="User" fill className="object-cover" />
+                    {session.image ? (
+                        <Image src={session.image} alt="User" fill className="object-cover" />
                     ) : (
-                        session.user.name?.[0]
+                        session.name?.[0]
                     )}
                   </div>
-                  <span className="text-sm font-bold text-slate-700 group-hover:text-blue-600">{session.user.name}</span>
+                  <span className="text-sm font-bold text-slate-700 group-hover:text-blue-600">{session.name}</span>
                 </Link>
                 <button 
-                  onClick={() => signOut()}
+                  onClick={async () => {
+                    await authClient.signOut();
+                    window.location.href = "/";
+                  }}
                   className="p-2.5 rounded-full text-gray-500 hover:text-red-500 hover:bg-red-50 transition-all"
                   title="Sign Out"
                 >

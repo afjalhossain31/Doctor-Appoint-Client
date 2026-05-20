@@ -2,12 +2,12 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 import { Calendar, Clock, User, Phone, Mail, Activity } from "lucide-react";
 
 function AppointmentForm() {
-  const { data: session, status } = useSession();
+  const { data: sessionData, isPending } = authClient.useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const doctorFromQuery = searchParams.get("doctor");
@@ -32,10 +32,10 @@ function AppointmentForm() {
   }, [doctorFromQuery]);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (!isPending && !sessionData) {
       router.push("/login");
     }
-  }, [status, router]);
+  }, [isPending, sessionData, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,7 +43,7 @@ function AppointmentForm() {
 
     const bookingData = {
       ...formData,
-      userEmail: session?.user?.email || "user@gmail.com",
+      userEmail: sessionData?.user?.email || "user@gmail.com",
     };
 
     try {
