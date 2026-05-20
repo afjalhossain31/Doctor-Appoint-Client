@@ -13,28 +13,46 @@ import {
   Github, 
   ArrowRight,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
     const formData = new FormData(e.currentTarget);
     const { name, email, password } = Object.fromEntries(formData.entries());
 
-    const { data, error: authError } = await authClient.signUp.email({
+    // Password Validation
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setError("Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!/[a-z]/.test(password)) {
+      setError("Password must contain at least one lowercase letter.");
+      return;
+    }
+
+    setLoading(true);
+
+    await authClient.signUp.email({
       email,
       password,
       name,
-      image: "", // Optional: specific in Better Auth
+      image: "",
     }, {
       onRequest: () => {
         setLoading(true);
@@ -60,7 +78,6 @@ export default function RegisterPage() {
       });
     } catch (err) {
       toast.error(`Login with ${provider} failed`);
-    } finally {
       setLoading(false);
     }
   };
@@ -127,11 +144,19 @@ export default function RegisterPage() {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={20} />
               <input
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
-                className="block w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl font-bold text-slate-900 outline-none transition-all placeholder:text-slate-400"
+                className="block w-full pl-12 pr-12 py-4 bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl font-bold text-slate-900 outline-none transition-all placeholder:text-slate-400"
                 placeholder="Create Password"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 hover:text-blue-600 transition-colors"
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
           </div>
 

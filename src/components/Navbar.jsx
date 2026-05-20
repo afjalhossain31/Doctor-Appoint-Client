@@ -134,16 +134,30 @@ const Navbar = () => {
               </Link>
             </li>
             <hr />
-            <li>
-              <Link href="/login" onClick={() => setIsOpen(false)} className="block hover:text-[#2563EB]">
-                Login
-              </Link>
-            </li>
-            <li>
-              <Link href="/register" onClick={() => setIsOpen(false)} className="block hover:text-[#2563EB]">
-                Register
-              </Link>
-            </li>
+            {session ? (
+              <li>
+                <button onClick={() => {
+                  authClient.signOut();
+                  setIsOpen(false);
+                  window.location.href = "/";
+                }} className="block hover:text-[#2563EB] w-full text-left">
+                  Logout
+                </button>
+              </li>
+            ) : (
+              <>
+                <li>
+                  <Link href="/login" onClick={() => setIsOpen(false)} className="block hover:text-[#2563EB]">
+                    Login
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/register" onClick={() => setIsOpen(false)} className="block hover:text-[#2563EB]">
+                    Register
+                  </Link>
+                </li>
+              </>
+            )}
           </ul>
         </div>
       )}

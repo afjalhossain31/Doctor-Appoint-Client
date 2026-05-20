@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Star, MapPin, Clock, ArrowRight, Search, X, Filter } from "lucide-react";
 import { useEffect, useState } from "react";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 const AllAppointmentsPage = () => {
   const [doctors, setDoctors] = useState([]);
@@ -11,6 +13,16 @@ const AllAppointmentsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [specialty, setSpecialty] = useState("All");
   const [specialties, setSpecialties] = useState([]);
+  const { data: sessionData } = authClient.useSession();
+  const router = useRouter();
+
+  const handleViewDetails = (doctorId) => {
+    if (!sessionData?.user) {
+      router.push("/login");
+      return;
+    }
+    router.push(`/doctors/${doctorId}`);
+  };
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -180,12 +192,12 @@ const AllAppointmentsPage = () => {
                         </div>
                         
                         <div className="flex items-center justify-between pt-6 border-t border-gray-100 gap-4">
-                            <Link
-                            href={`/doctors/d1`}
+                            <button
+                            onClick={() => handleViewDetails(doctor._id || 'd1')}
                             className="flex-1 text-center py-4 rounded-2xl border-2 border-slate-100 text-slate-900 font-black text-sm hover:bg-slate-50 transition-all uppercase tracking-wider"
                             >
                             Details
-                            </Link>
+                            </button>
                             <Link
                             href={`/book-appointment?doctor=${encodeURIComponent(doctor.name)}`}
                             className="flex-1 text-center py-4 rounded-2xl bg-blue-600 text-white font-black text-sm hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-200 transition-all uppercase tracking-wider"
@@ -202,6 +214,6 @@ const AllAppointmentsPage = () => {
       </div>
     </div>
   );
-};
+}
 
 export default AllAppointmentsPage;

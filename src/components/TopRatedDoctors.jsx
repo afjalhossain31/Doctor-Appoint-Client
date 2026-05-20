@@ -4,17 +4,39 @@ import Image from "next/image";
 import Link from "next/link";
 import { Star, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 const TopRatedDoctors = () => {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { data: sessionData } = authClient.useSession();
+  const router = useRouter();
+
+  const handleViewDetails = (doctorId) => {
+    if (!sessionData?.user) {
+      router.push("/login");
+      return;
+    }
+    router.push(`/doctors/${doctorId}`);
+  };
 
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors`);
         if (res.ok) {
-          const data = await res.json();
+          let data = await res.json();
+          
+          // Find Dr. Afjal Hossain and prioritize it in top 3
+          const afjal = data.find(d => d.name && d.name.toLowerCase().includes("afjal"));
+          if (afjal) {
+            // Remove Afjal from the array if found
+            data = data.filter(d => d._id !== afjal._id);
+            // Add Afjal at the beginning
+            data.unshift(afjal);
+          }
+          
           setDoctors(data.slice(0, 3)); // Only show top 3 on home page
         }
       } catch (error) {
@@ -83,12 +105,12 @@ const TopRatedDoctors = () => {
                     <div className="text-sm text-gray-500">
                       <span className="font-bold text-slate-900">{doctor.reviews || "120"}</span> Reviews
                     </div>
-                    <Link
-                      href={`/doctors/d1`}
+                    <button
+                      onClick={() => handleViewDetails(doctor._id || 'd1')}
                       className="px-4 py-2.5 rounded-xl border border-slate-900 text-slate-900 font-bold text-sm hover:bg-slate-50 transition-all"
                     >
                       Details
-                    </Link>
+                    </button>
                     <Link
                       href={`/book-appointment?doctor=${encodeURIComponent(doctor.name)}`}
                       className="px-4 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all"

@@ -5,13 +5,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, Lock, ArrowRight, Github } from "lucide-react";
+import { Mail, Lock, ArrowRight, Github, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -21,18 +22,22 @@ export default function LoginPage() {
     setPasswordError("");
 
     // Password Validation
-    if (password.length < 8) {
-      setPasswordError("Password must be at least 8 characters long.");
+    if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters long.");
       return;
     }
     if (!/[A-Z]/.test(password)) {
-      setPasswordError("Password must contain at least one capital letter.");
+      setPasswordError("Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!/[a-z]/.test(password)) {
+      setPasswordError("Password must contain at least one lowercase letter.");
       return;
     }
 
     setLoading(true);
     
-    const { data, error } = await authClient.signIn.email({
+    await authClient.signIn.email({
       email,
       password,
       rememberMe: true,
@@ -44,6 +49,7 @@ export default function LoginPage() {
       },
       onError: (ctx) => {
         toast.error(ctx.error.message || "Invalid credentials");
+        setPasswordError(ctx.error.message || "Login failed");
         setLoading(false);
       }
     });
@@ -96,16 +102,24 @@ export default function LoginPage() {
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
                   if (passwordError) setPasswordError("");
                 }}
                 placeholder="••••••••"
-                className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 transition-all font-medium outline-none ${passwordError ? 'ring-2 ring-red-500' : 'focus:ring-blue-500'}`}
+                className={`w-full pl-12 pr-12 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 transition-all font-medium outline-none ${passwordError ? 'ring-2 ring-red-500' : 'focus:ring-blue-500'}`}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
             {passwordError && (
               <p className="text-red-500 text-xs font-bold mt-1 ml-1 animate-pulse">
