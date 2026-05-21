@@ -38,11 +38,10 @@ function LoginForm() {
     }
 
     setLoading(true);
-    
+
     await authClient.signIn.email({
       email,
       password,
-      rememberMe: true,
       callbackURL: callbackUrl
     }, {
       onSuccess: () => {
@@ -63,6 +62,7 @@ function LoginForm() {
       await authClient.signIn.social({
         provider: "google",
         callbackURL: callbackUrl,
+        disableRedirect: false,
       });
     } catch (error) {
       console.error("Google sign-in error:", error);

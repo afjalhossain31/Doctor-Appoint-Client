@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { apiBaseUrl } from "@/lib/api-base";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { 
-  User, 
-  Mail, 
-  Lock, 
-  Image as ImageIcon, 
-  Globe, 
-  Github, 
+import {
+  User,
+  Mail,
+  Lock,
+  Image as ImageIcon,
+  Globe,
+  Github,
   ArrowRight,
   ShieldCheck,
   AlertCircle,
@@ -57,9 +58,41 @@ export default function RegisterPage() {
       onRequest: () => {
         setLoading(true);
       },
-      onSuccess: () => {
-        toast.success("Registration successful!");
-        router.push("/login");
+      onSuccess: async () => {
+        try {
+          // Better Auth can create a session on signup; clear it so login happens normally.
+          try {
+            await authClient.signOut();
+          } catch (e) {
+            // ignore
+          }
+
+          const response = await fetch(`${apiBaseUrl}/users`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ name, email, image: "" }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data?.message || "Failed to save user");
+          }
+
+          if (data?.message === "user already exists") {
+            toast("User already registered. Please login.", { icon: "ℹ️" });
+          } else {
+            toast.success("Registration successful!");
+          }
+
+          router.push("/login");
+        } catch (error) {
+          console.error("Register success handling failed:", error);
+          setError(error?.message || "Registration failed");
+          toast.error(error?.message || "Registration failed");
+        } finally {
+          setLoading(false);
+        }
       },
       onError: (ctx) => {
         setError(ctx.error.message || "Registration failed");
@@ -75,6 +108,7 @@ export default function RegisterPage() {
       await authClient.signIn.social({
         provider: provider,
         callbackURL: "/",
+        disableRedirect: false,
       });
     } catch (err) {
       toast.error(`Login with ${provider} failed`);
@@ -85,7 +119,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-[2.5rem] shadow-xl shadow-slate-200 border border-slate-100">
-        
+
         {/* Header */}
         <div className="text-center">
           <div className="mx-auto h-16 w-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-200 mb-6">
