@@ -1,6 +1,6 @@
 # DoctorAppoint
 
-Live Site URL: Add your deployed URL here after hosting on Vercel or another platform.
+Live Site URL: https://doctor-appoint-client.vercel.app
 
 DoctorAppoint is a doctor appointment booking platform where patients can browse specialists, open doctor details, and manage bookings from a private dashboard.
 
