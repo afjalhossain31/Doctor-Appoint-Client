@@ -59,7 +59,7 @@ export default function RegisterPage() {
       },
       onSuccess: () => {
         toast.success("Registration successful!");
-        router.push("/dashboard");
+        router.push("/login");
       },
       onError: (ctx) => {
         setError(ctx.error.message || "Registration failed");
@@ -74,7 +74,7 @@ export default function RegisterPage() {
       setLoading(true);
       await authClient.signIn.social({
         provider: provider,
-        callbackURL: "/dashboard",
+        callbackURL: "/",
       });
     } catch (err) {
       toast.error(`Login with ${provider} failed`);

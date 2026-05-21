@@ -18,6 +18,7 @@ export const auth = betterAuth({
     },
   },
   user: {
-    modelName: "users", // Map "user" to "users" collection to match your Express backend
+    modelName: "users",
   },
+  
 });

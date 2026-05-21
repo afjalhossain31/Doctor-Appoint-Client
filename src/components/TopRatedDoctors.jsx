@@ -6,6 +6,7 @@ import { Star, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { apiBaseUrl } from "@/lib/api-base";
 
 const TopRatedDoctors = () => {
   const [doctors, setDoctors] = useState([]);
@@ -15,7 +16,7 @@ const TopRatedDoctors = () => {
 
   const handleViewDetails = (doctorId) => {
     if (!sessionData?.user) {
-      router.push("/login");
+      router.push(`/login?callbackUrl=${encodeURIComponent(`/doctors/${doctorId}`)}`);
       return;
     }
     router.push(`/doctors/${doctorId}`);
@@ -24,7 +25,7 @@ const TopRatedDoctors = () => {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors`);
+        const res = await fetch(`${apiBaseUrl}/doctors`);
         if (res.ok) {
           let data = await res.json();
           
@@ -109,7 +110,7 @@ const TopRatedDoctors = () => {
                       onClick={() => handleViewDetails(doctor._id || 'd1')}
                       className="px-4 py-2.5 rounded-xl border border-slate-900 text-slate-900 font-bold text-sm hover:bg-slate-50 transition-all"
                     >
-                      Details
+                      View Details
                     </button>
                     <Link
                       href={`/book-appointment?doctor=${encodeURIComponent(doctor.name)}`}

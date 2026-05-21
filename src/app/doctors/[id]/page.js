@@ -22,6 +22,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { apiBaseUrl } from "@/lib/api-base";
 
 const DoctorDetailsPage = () => {
   const params = useParams();
@@ -45,7 +46,7 @@ const DoctorDetailsPage = () => {
     const fetchDoctor = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:5000/doctors/${doctorId}`);
+        const response = await fetch(`${apiBaseUrl}/doctors/${doctorId}`);
         
         if (!response.ok) {
           throw new Error("Doctor not found");
@@ -70,7 +71,7 @@ const DoctorDetailsPage = () => {
   const handleBooking = () => {
     if (!session) {
       toast.error("Please login to book an appointment");
-      router.push("/login");
+      router.push(`/login?callbackUrl=${encodeURIComponent(`/doctors/${doctorId}`)}`);
       return;
     }
     setIsTimeDropdownOpen(false);
@@ -90,14 +91,15 @@ const DoctorDetailsPage = () => {
         doctorId: doctorData._id || doctorData.id,
         doctorName: doctorData.name,
         specialty: doctorData.specialty,
-        email: session.email,
+        userEmail: session.email,
+        patientName: session.name || "",
         appointmentDate: selectedDate,
         appointmentTime: selectedTime,
         fee: doctorData.fee,
         status: "pending"
       };
 
-      const response = await fetch("http://localhost:5000/appointments", {
+      const response = await fetch(`${apiBaseUrl}/appointments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -130,7 +132,7 @@ const DoctorDetailsPage = () => {
     e.preventDefault();
     if (!session) {
       toast.error("Please login to leave a review");
-      router.push("/login");
+      router.push(`/login?callbackUrl=${encodeURIComponent(`/doctors/${doctorId}`)}`);
       return;
     }
 

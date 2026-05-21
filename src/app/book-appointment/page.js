@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 import { Calendar, Clock, User, Phone, Mail, Activity } from "lucide-react";
+import { apiBaseUrl } from "@/lib/api-base";
 
 function AppointmentForm() {
   const { data: sessionData, isPending } = authClient.useSession();
@@ -33,9 +34,9 @@ function AppointmentForm() {
 
   useEffect(() => {
     if (!isPending && !sessionData) {
-      router.push("/login");
+      router.push(`/login?callbackUrl=${encodeURIComponent(`/book-appointment${doctorFromQuery ? `?doctor=${encodeURIComponent(doctorFromQuery)}` : ""}`)}`);
     }
-  }, [isPending, sessionData, router]);
+  }, [isPending, sessionData, router, doctorFromQuery]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,7 +48,7 @@ function AppointmentForm() {
     };
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/appointments`, {
+      const res = await fetch(`${apiBaseUrl}/appointments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -69,7 +70,7 @@ function AppointmentForm() {
     }
   };
 
-  if (status === "loading") return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (isPending) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4">

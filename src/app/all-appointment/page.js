@@ -6,6 +6,7 @@ import { Star, MapPin, Clock, ArrowRight, Search, X, Filter } from "lucide-react
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { apiBaseUrl } from "@/lib/api-base";
 
 const AllAppointmentsPage = () => {
   const [doctors, setDoctors] = useState([]);
@@ -18,7 +19,7 @@ const AllAppointmentsPage = () => {
 
   const handleViewDetails = (doctorId) => {
     if (!sessionData?.user) {
-      router.push("/login");
+      router.push(`/login?callbackUrl=${encodeURIComponent(`/doctors/${doctorId}`)}`);
       return;
     }
     router.push(`/doctors/${doctorId}`);
@@ -27,7 +28,7 @@ const AllAppointmentsPage = () => {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors`);
+        const res = await fetch(`${apiBaseUrl}/doctors`);
         if (res.ok) {
           const data = await res.json();
           setDoctors(data);
@@ -92,26 +93,22 @@ const AllAppointmentsPage = () => {
               </div>
 
               {/* Specialty Filter */}
-              <div className="flex flex-wrap gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-[auto_minmax(240px,360px)] items-center gap-3 md:gap-4">
                 <div className="flex items-center gap-2 text-sm font-bold text-slate-600 uppercase tracking-wider">
                   <Filter size={18} className="text-blue-600" />
                   Filter by Specialty:
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <select
+                  value={specialty}
+                  onChange={(e) => setSpecialty(e.target.value)}
+                  className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-blue-600 focus:bg-white focus:outline-none font-semibold text-slate-700"
+                >
                   {specialties.map((spec) => (
-                    <button
-                      key={spec}
-                      onClick={() => setSpecialty(spec)}
-                      className={`px-5 py-2 rounded-full font-bold text-sm transition-all ${
-                        specialty === spec
-                          ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      }`}
-                    >
+                    <option key={spec} value={spec}>
                       {spec}
-                    </button>
+                    </option>
                   ))}
-                </div>
+                </select>
               </div>
 
               {/* Clear Filters */}
@@ -196,7 +193,7 @@ const AllAppointmentsPage = () => {
                             onClick={() => handleViewDetails(doctor._id || 'd1')}
                             className="flex-1 text-center py-4 rounded-2xl border-2 border-slate-100 text-slate-900 font-black text-sm hover:bg-slate-50 transition-all uppercase tracking-wider"
                             >
-                            Details
+                            View Details
                             </button>
                             <Link
                             href={`/book-appointment?doctor=${encodeURIComponent(doctor.name)}`}

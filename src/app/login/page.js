@@ -1,15 +1,17 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, Lock, ArrowRight, Github, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -41,11 +43,11 @@ export default function LoginPage() {
       email,
       password,
       rememberMe: true,
-      callbackURL: "/dashboard"
+      callbackURL: callbackUrl
     }, {
       onSuccess: () => {
         toast.success("Login successful!");
-        router.push("/dashboard");
+        router.push(callbackUrl);
       },
       onError: (ctx) => {
         toast.error(ctx.error.message || "Invalid credentials");
@@ -60,7 +62,7 @@ export default function LoginPage() {
       setGoogleLoading(true);
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/dashboard",
+        callbackURL: callbackUrl,
       });
     } catch (error) {
       console.error("Google sign-in error:", error);
@@ -175,5 +177,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

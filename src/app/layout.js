@@ -12,6 +12,7 @@ const poppins = Poppins({
 });
 
 export const metadata = {
+  metadataBase: new URL("https://doctorappoint.com"),
   title: "DoctorAppoint - Book Doctor Appointments Online | Medical Consultations",
   description: "DoctorAppoint is your trusted online platform to book appointments with qualified doctors. Find specialists, view profiles, read reviews, and schedule consultations easily.",
   keywords: "doctor appointment, online consultation, medical appointments, healthcare booking, specialist directory",

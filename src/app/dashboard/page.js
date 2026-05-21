@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import { apiBaseUrl } from "@/lib/api-base";
 
 export default function DashboardPage() {
   const { data: sessionData, isPending } = authClient.useSession();
@@ -52,68 +53,83 @@ export default function DashboardPage() {
   const [upcomingCount, setUpcomingCount] = useState(0);
 
   useEffect(() => {
+    if (sessionData?.user && !profile.name) {
+      const timer = setTimeout(() => {
+        setProfile({
+          name: sessionData.user.name || "Demo User",
+          email: sessionData.user.email || "user@doctor.com",
+          photo: sessionData.user.image || ""
+        });
+      }, 0);
+
+      return () => clearTimeout(timer);
+    }
+  }, [sessionData, profile.name]);
+
+  useEffect(() => {
     if (!isPending && !sessionData) {
       router.push("/login");
-    } else if (sessionData) {
-      // Setup profile from session if not set
-      if (sessionData.user && !profile.name) { 
-        const timer = setTimeout(() => {
-          setProfile({
-            name: sessionData.user.name || "Demo User",
-            email: sessionData.user.email || "user@doctor.com",
-            photo: sessionData.user.image || ""
-          });
-        }, 0);
-        return () => clearTimeout(timer);
-      }
-      
-      // Fetch dynamic doctors from MongoDB
-      const fetchDoctors = async () => {
-        try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors`);
-          const data = await res.json();
-          setDoctors(data);
-        } catch (error) {
-          console.error("Error fetching doctors:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      // Fetch appointments for logged-in user
-      const fetchAppointments = async () => {
-        try {
-          setAppointmentsLoading(true);
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/appointments?email=${sessionData.user.email}`);
-          if (res.ok) {
-            const data = await res.json();
-            setBookings(data);
-            
-            // Calculate stats on client-side only
-            const now = new Date();
-            const completed = data.filter(b => new Date(b.appointmentDate) < now).length;
-            const upcoming = data.filter(b => new Date(b.appointmentDate) >= now).length;
-            setCompletedCount(completed);
-            setUpcomingCount(upcoming);
-          }
-        } catch (error) {
-          console.error("Error fetching appointments:", error);
-        } finally {
-          setAppointmentsLoading(false);
-        }
-      };
-      
-      fetchDoctors();
-      fetchAppointments();
     }
-  }, [isPending, router, sessionData, profile.name]);
+  }, [isPending, router, sessionData]);
+
+  useEffect(() => {
+    if (!sessionData?.user?.email) {
+      return;
+    }
+
+    // Fetch dynamic doctors from MongoDB
+    const fetchDoctors = async () => {
+      try {
+        const res = await fetch(`${apiBaseUrl}/doctors`);
+        const data = await res.json();
+        setDoctors(data);
+      } catch (error) {
+        console.error("Error fetching doctors:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Fetch appointments for logged-in user
+    const fetchAppointments = async () => {
+      try {
+        setAppointmentsLoading(true);
+        const encodedEmail = encodeURIComponent(sessionData.user.email);
+        let res = await fetch(`${apiBaseUrl}/appointments/${encodedEmail}`);
+
+        // Fallback for servers that use query-style filtering
+        if (!res.ok) {
+          res = await fetch(`${apiBaseUrl}/appointments?email=${encodedEmail}`);
+        }
+
+        if (res.ok) {
+          const data = await res.json();
+          setBookings(data);
+
+          // Calculate stats on client-side only
+          const now = new Date();
+          const completed = data.filter(b => new Date(b.appointmentDate || b.date) < now).length;
+          const upcoming = data.filter(b => new Date(b.appointmentDate || b.date) >= now).length;
+          setCompletedCount(completed);
+          setUpcomingCount(upcoming);
+        }
+      } catch (error) {
+        console.error("Error fetching appointments:", error);
+      } finally {
+        setAppointmentsLoading(false);
+      }
+    };
+
+    fetchDoctors();
+    fetchAppointments();
+  }, [sessionData?.user?.email]);
 
   // Actions: Doctors
   const handleDeleteDoctor = async (id) => {
     if (!window.confirm("Are you sure you want to delete this doctor?")) return;
     
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/${id}`, {
+      const res = await fetch(`${apiBaseUrl}/doctors/${id}`, {
         method: "DELETE"
       });
       if (res.ok) {
@@ -140,7 +156,7 @@ export default function DashboardPage() {
     };
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/${editDoctor._id}`, {
+      const res = await fetch(`${apiBaseUrl}/doctors/${editDoctor._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -161,23 +177,116 @@ export default function DashboardPage() {
     }
   };
 
-  // Actions: Booking
-  const handleDeleteBooking = (id) => {
-    setBookings(bookings.filter(b => b.id !== id));
-    toast.success("Appointment deleted successfully!");
+  const requestAppointmentMutation = async ({ appointmentId, mode, payload, userEmail }) => {
+    const safeId = encodeURIComponent(String(appointmentId));
+    const safeEmail = userEmail ? encodeURIComponent(String(userEmail)) : "";
+    const emailQuery = safeEmail ? `?userEmail=${safeEmail}` : "";
+    const emailAndIdQuery = safeEmail ? `?id=${safeId}&userEmail=${safeEmail}` : `?id=${safeId}`;
+    const candidates = mode === "delete"
+      ? [
+          { url: `${apiBaseUrl}/appointments/${safeId}${emailQuery}`, method: "DELETE" },
+          { url: `${apiBaseUrl}/appointment/${safeId}${emailQuery}`, method: "DELETE" },
+          { url: `${apiBaseUrl}/appointments${emailAndIdQuery}`, method: "DELETE" },
+          { url: `${apiBaseUrl}/appointment${emailAndIdQuery}`, method: "DELETE" },
+          { url: `${apiBaseUrl}/appointments/${safeId}`, method: "POST", body: { action: "delete", userEmail } },
+          { url: `${apiBaseUrl}/appointment/${safeId}`, method: "POST", body: { action: "delete", userEmail } },
+        ]
+      : [
+          { url: `${apiBaseUrl}/appointments/${safeId}`, method: "PUT", body: payload },
+          { url: `${apiBaseUrl}/appointment/${safeId}`, method: "PUT", body: payload },
+          { url: `${apiBaseUrl}/appointments/${safeId}`, method: "PATCH", body: payload },
+          { url: `${apiBaseUrl}/appointment/${safeId}`, method: "PATCH", body: payload },
+          { url: `${apiBaseUrl}/appointments?id=${safeId}`, method: "PUT", body: payload },
+          { url: `${apiBaseUrl}/appointment?id=${safeId}`, method: "PUT", body: payload },
+          { url: `${apiBaseUrl}/appointments?id=${safeId}`, method: "PATCH", body: payload },
+          { url: `${apiBaseUrl}/appointment?id=${safeId}`, method: "PATCH", body: payload },
+        ];
+
+    for (const candidate of candidates) {
+      try {
+        const res = await fetch(candidate.url, {
+          method: candidate.method,
+          headers: candidate.body ? { "Content-Type": "application/json" } : undefined,
+          body: candidate.body ? JSON.stringify(candidate.body) : undefined,
+        });
+
+        if (res.ok) {
+          return true;
+        }
+      } catch (error) {
+        console.error("Appointment mutation attempt failed:", error);
+      }
+    }
+
+    return false;
   };
 
-  const handleUpdateBooking = (e) => {
+  // Actions: Booking
+  const handleDeleteBooking = async (id) => {
+    if (!id) {
+      toast.error("Invalid appointment id");
+      return;
+    }
+
+    try {
+      const isDeleted = await requestAppointmentMutation({
+        appointmentId: id,
+        mode: "delete",
+        userEmail: sessionData?.user?.email,
+      });
+
+      if (isDeleted) {
+        setBookings(prev => prev.filter(b => (b._id || b.id) !== id));
+        toast.success("Appointment deleted successfully!");
+      } else {
+        toast.error("Failed to delete appointment");
+      }
+    } catch (error) {
+      console.error("Error deleting appointment:", error);
+      toast.error("An error occurred while deleting");
+    }
+  };
+
+  const handleUpdateBooking = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const updatedData = {
+      appointmentDate: formData.get("date"),
+      appointmentTime: formData.get("time"),
       date: formData.get("date"),
       time: formData.get("time")
     };
-    
-    setBookings(bookings.map(b => b.id === editBooking.id ? { ...b, ...updatedData } : b));
-    setEditBooking(null);
-    toast.success("Appointment updated successfully!");
+
+    try {
+      const appointmentId = editBooking._id || editBooking.id;
+      if (!appointmentId) {
+        toast.error("Invalid appointment id");
+        return;
+      }
+
+      const payload = {
+        ...updatedData,
+        userEmail: sessionData?.user?.email,
+      };
+
+      const isUpdated = await requestAppointmentMutation({
+        appointmentId,
+        mode: "update",
+        payload,
+        userEmail: sessionData?.user?.email,
+      });
+
+      if (isUpdated) {
+        setBookings(prev => prev.map(b => (b._id || b.id) === appointmentId ? { ...b, ...updatedData } : b));
+        setEditBooking(null);
+        toast.success("Appointment updated successfully!");
+      } else {
+        toast.error("Failed to update appointment");
+      }
+    } catch (error) {
+      console.error("Error updating appointment:", error);
+      toast.error("An error occurred while updating");
+    }
   };
 
   // Actions: Profile
@@ -350,15 +459,15 @@ export default function DashboardPage() {
             {bookings.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {bookings.map((booking) => (
-                  <div key={booking.id} className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200/50 transition-all group">
+                  <div key={booking._id || booking.id} className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200/50 transition-all group">
                     <div className="flex justify-between items-start mb-6">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-                          {booking.doctor?.[0] || "D"}
+                          {(booking.doctor || booking.doctorName)?.[0] || "D"}
                         </div>
                         <div>
-                          <h4 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{booking.doctor || "Doctor"}</h4>
-                          <p className="text-xs text-blue-500 font-bold uppercase tracking-widest">{booking.specialty || "Specialty"}</p>
+                        <h4 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{booking.doctor || booking.doctorName || "Doctor"}</h4>
+                            <p className="text-xs text-blue-500 font-bold uppercase tracking-widest">{booking.specialty || "Specialty"}</p>
                         </div>
                       </div>
                       <div className="text-right">
@@ -390,7 +499,7 @@ export default function DashboardPage() {
                         <Edit3 size={16} /> Update
                       </button>
                       <button 
-                        onClick={() => handleDeleteBooking(booking.id)}
+                        onClick={() => handleDeleteBooking(booking._id || booking.id)}
                         className="flex-1 py-3 bg-red-50 text-red-500 font-bold rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2 text-sm"
                       >
                         <Trash2 size={16} /> Delete
@@ -459,7 +568,7 @@ export default function DashboardPage() {
                <form onSubmit={handleUpdateBooking} className="space-y-6">
                   <div className="space-y-2">
                      <label className="text-xs font-bold text-gray-400 uppercase ml-1">Doctor (Read-only)</label>
-                     <input type="text" value={editBooking.doctor || "Unknown"} disabled className="w-full px-5 py-3.5 bg-gray-100 rounded-2xl text-slate-500 font-bold" />
+                  <input type="text" value={editBooking.doctor || editBooking.doctorName || "Unknown"} disabled className="w-full px-5 py-3.5 bg-gray-100 rounded-2xl text-slate-500 font-bold" />
                   </div>
                   <div className="space-y-4">
                      <div className="space-y-2">

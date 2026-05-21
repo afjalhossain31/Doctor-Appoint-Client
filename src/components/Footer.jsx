@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn } from "react-icons/fa";
+import { FaFacebookF, FaInstagram, FaLinkedinIn } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import { Mail, MapPin, Phone, ArrowUpRight } from "lucide-react";
 
 const Footer = () => {
@@ -31,7 +32,7 @@ const Footer = () => {
                             Your health journey is personal, and we&apos;re here to walk it with you. Connect with caring specialists dedicated to providing the highest quality healthcare for you and your loved ones
                         </p>
                         <div className="flex gap-4">
-                            {[FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn].map((Icon, index) => (
+                            {[FaFacebookF, FaXTwitter, FaInstagram, FaLinkedinIn].map((Icon, index) => (
                                 <a
                                     key={index}
                                     href="#"
