@@ -12,6 +12,8 @@ const poppins = Poppins({
 });
 
 export const metadata = {
+  // resolve Open Graph / Twitter images correctly in dev and production
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"),
   title: "DoctorAppoint - Book Doctor Appointments Online | Medical Consultations",
   description: "DoctorAppoint is your trusted online platform to book appointments with qualified doctors. Find specialists, view profiles, read reviews, and schedule consultations easily.",
   keywords: "doctor appointment, online consultation, medical appointments, healthcare booking, specialist directory",
